@@ -12,3 +12,9 @@ Go to `localhost:5000/dev` to practive noun declension. Press the "start with ne
 Go to `localhost:5000/dev2` to practive adjective AND noun declension! This is so cool! I can't believe I stopped working on this.
 
 In the quiz modes, if you fail a word, it will keep coming up every few questions until you get it correct!
+
+TODO:
+- Design a custom dictionary system where users can define the words they want to practice.
+- Integrate it as a web extension where a user can highlight text and add words to their dictionary automatically.
+- Let the user create "sets" of flashcards or words.
+- Find a way to extrapolate this to other languages, because it seems hella useful.
