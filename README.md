@@ -1,7 +1,7 @@
 # Russian-Flashcards
 An ambitious language-learning app focusing on Russian verbs on flashcards. In early development.
 
-I made this a couple years ago and stopped working on it when a semester began. I never finished it, but I was very proud of the early visuals (the flashcard flip) and the review system.
+I made this a couple years ago and stopped working on it when a semester began. I never finished it, but I was very proud of the early visuals (the flashcard flip) and the review system. I haven't touched this since July of 2020.
 
 Install flask `pip install flask`, then run `python -m flask --app main_page.py run`
 
