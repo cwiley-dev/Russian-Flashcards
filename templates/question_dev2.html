@@ -1,0 +1,850 @@
+<html>
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Declension practice</title>
+	<style>
+html {
+  font-family: sans-serif;
+}
+
+.content-wrapper {
+  text-align: center;
+}
+
+.question-wrapper {
+  display: inline-block;
+  width: auto;
+  background: #EEE;
+  padding: 20px 40px;
+  font-size: 20px;
+}
+
+.question-wrapper button {
+  font-size: 20px;
+}
+
+#question {
+  font-size: 23px;
+}
+
+.word {
+  font-size: 25px;
+}
+
+.selected-word {
+  font-weight: bold;
+  font-size: 27px;
+}
+
+#word-info {
+  color: #333;
+  font-size: 16px;
+  font-style: italic;
+}
+
+.question-wrapper table {
+  display: inline-block;
+  margin: auto;
+  text-align: center;
+}
+
+#counter {
+  position: relative;
+}
+
+.options {
+  margin-top: 20px;
+  float: left;
+  text-align: left;
+  background: #EEE;
+  padding: 10px;
+  position: absolute;
+}
+
+.options .header {
+  text-align: center;
+  font-weight: bold;
+  font-size: 20px;
+}
+
+.options button {
+  margin: auto;
+}
+
+.correct, .incorrect {
+  outline: none;
+}
+
+.correct {
+  background-color: #AFA !important;
+  box-shadow: 0 0 5px lime inset !important;
+}
+
+.incorrect {
+  background-color: #FAA !important;
+  box-shadow: 0 0 5px red inset !important;
+}
+
+.declined {
+  color: #004e03;
+}
+
+.choice {
+  background: #FFF;
+  border: 1px solid #AAA;
+  padding: 7px 10px;
+  cursor: pointer;
+}
+
+button, input {
+  cursor: pointer;
+}
+
+.choice:hover {
+  box-shadow: 0px 0px 5px grey inset;
+}
+	</style>
+</head>
+<body>
+  <div class='content-wrapper'>
+    <div class='question-wrapper'>
+      <span id='question'>Question</span><br>
+      <span id='question-adjective' class='word'>Adjective</span> <span id='question-noun' class='word'>Noun</span><br>
+      <span id='word-info'></span>
+      <br>
+      <br>
+      <table>
+        <tr>
+          <td><button id='choice1' class='choice'>Choice 1</button></td>
+          <td><button id='choice2' class='choice'>Choice 2</button></td>
+        </tr>
+        <tr>
+          <td><button id='choice3' class='choice'>Choice 3</button></td>
+          <td><button id='choice4' class='choice'>Choice 4</button></td>
+        </tr>
+      </table>
+      <br><br>
+      <button id='next-button'>Next question</button><br>
+
+      <span id='counter'>Correct: 0/0</span><br>
+    </div>
+
+    <div class='options'>
+      <div class='header'>Options</div>
+      <hr>
+      Case:
+      <table>
+        <tr>
+          <td>Nominative:</td>
+          <td><input type='checkbox' id='nom-sg'> singular</td>
+          <td><input type='checkbox' id='nom-pl' checked> plural</td>
+        </tr>
+        <tr>
+          <td>Accusative:</td>
+          <td><input type='checkbox' id='acc-sg'> singular</td>
+          <td><input type='checkbox' id='acc-pl'> plural</td>
+        </tr>
+        <tr>
+          <td>Genitive:</td>
+          <td><input type='checkbox' id='gen-sg'> singular</td>
+          <td><input type='checkbox' id='gen-pl'> plural</td>
+        </tr>
+        <tr>
+          <td>Dative:</td>
+          <td><input type='checkbox' id='dat-sg'> singular</td>
+          <td><input type='checkbox' id='dat-pl'> plural</td>
+        </tr>
+        <tr>
+          <td>Instrumental:</td>
+          <td><input type='checkbox' id='ins-sg'> singular</td>
+          <td><input type='checkbox' id='ins-pl'> plural</td>
+        </tr>
+        <tr>
+          <td>Prepositional:</td>
+          <td><input type='checkbox' id='pre-sg'> singular</td>
+          <td><input type='checkbox' id='pre-pl'> plural</td>
+        </tr>
+      </table>
+      Subject:
+      <table>
+        <tr>
+          <td>Gender:</td>
+          <td><input type='checkbox' id='opt-m' checked> masculine</td>
+          <td><input type='checkbox' id='opt-f' checked> feminine</td>
+          <td><input type='checkbox' id='opt-n' checked> neuter</td>
+        </tr>
+        <tr>
+          <td>Words:</td>
+          <td><input type='checkbox' id='opt-adj' checked> adjective</td>
+          <td><input type='checkbox' id='opt-noun' checked> noun</td>
+        </tr>
+      </table>
+      <br>
+      <button id='start'>Start with new options</button>
+    </div>
+  </div>
+
+  
+</body>
+<script>
+
+/*
+adjective + noun = adjective -> noun
+adjective = noun display as declined
+noun = adjective display as declined
+
+*/
+var options = {
+	'nom-sg': false,
+	'nom-pl': false,
+	'acc-sg': false,
+	'acc-pl': false,
+	'gen-sg': false,
+	'gen-pl': false,
+	'dat-sg': false,
+	'dat-pl': false,
+	'ins-sg': false,
+	'ins-pl': false,
+	'pre-sg': false,
+	'pre-pl': false,
+	'opt-m':  false,
+	'opt-f':  false,
+	'opt-n':  false,
+	'opt-adj': false,
+	'opt-noun': false
+}
+
+document.getElementById('start').onclick = e => startButton();
+
+var correct = false;
+var canAnswer = true;
+var correctCount = 0;
+var totalCount = 0;
+
+var queue = [];
+var current;
+
+var review = []; // {question, totalCount when answered}
+const reviewTime = 5; // # of questions until the question is revisited
+var isReviewQuestion = false;
+
+function startButton() {
+	if (!loadOptions()) return false;
+	// variable reset
+	canAnswer = true;
+	correctCount = 0;
+	totalCount = 0;
+	queue = [];
+	review = [];
+	isReviewQuestion = false;
+	updateCounter();
+	// color reset
+	for (let i=0; i<4; i++) {
+		document.getElementById(`choice${i+1}`).classList.remove('correct');
+		document.getElementById(`choice${i+1}`).classList.remove('incorrect');
+	}
+	// Button handlers
+	document.getElementById('next-button').onclick = e => nextQuestion();
+	document.getElementById('choice1').onclick = e => answerQuestion(1);
+	document.getElementById('choice2').onclick = e => answerQuestion(2);
+	document.getElementById('choice3').onclick = e => answerQuestion(3);
+	document.getElementById('choice4').onclick = e => answerQuestion(4);
+	// queue population
+	refillQueue(() => {
+		current = queue[0];
+		updateElements(current);
+	});
+}
+
+function answerQuestion(num) {
+	if (!canAnswer) return;
+	canAnswer = false;
+	// checking answer
+	let value = document.getElementById(`choice${num}`).innerHTML;
+	if (queue[0].isChoiceCorrect(value)) correct = true;
+	else correct = false;
+	// coloring
+	let values = [
+	document.getElementById('choice1').innerHTML,
+	document.getElementById('choice2').innerHTML,
+	document.getElementById('choice3').innerHTML,
+	document.getElementById('choice4').innerHTML
+	];
+	if (!correct) document.getElementById(`choice${num}`).classList.add('incorrect');
+	for (let val of values) if (queue[0].isChoiceCorrect(val)) document.getElementById(`choice${values.indexOf(val)+1}`).classList.add('correct');
+	// declension class
+	//if (correct) 
+		document.getElementById('question-' + current.currentWord).classList.add('declined');
+	// review handling
+	if (!correct && !isReviewQuestion) {
+		review.push({'question':current,'time':totalCount});
+		isReviewQuestion = true;
+	}
+	// counter updating
+	if (correct) correctCount += 1;
+	totalCount += 1;
+	updateCounter();
+
+	if (correct) correctAnimation();
+	correct = false;
+
+	if (current.currentWord == "adjective") document.getElementById("question-adjective").innerHTML = current.adjectiveAnswer;
+	if (current.currentWord == "noun") document.getElementById("question-noun").innerHTML = current.nounAnswer;
+}
+
+function nextQuestion() {
+	// clear coloring
+	for (let i=0; i<4; i++) {
+		document.getElementById(`choice${i+1}`).classList.remove('correct');
+		document.getElementById(`choice${i+1}`).classList.remove('incorrect');
+	}
+	document.getElementById('question-adjective').classList.remove('declined');
+	document.getElementById('question-noun').classList.remove('declined');
+
+	// question skipping counts towards total
+	if (canAnswer) totalCount += 1;
+
+	// handles question parts and manipulation
+	if (current.currentWord == "adjective" && options["opt-noun"]) { // part 1 finished
+		current.currentWord = "noun";
+	} else { // new question
+		current.currentWord = "adjective";
+		queue = queue.slice(1); // remove 1st (completed question)
+		// review insert
+		for (let item of review) {
+			if (totalCount - item.time >= reviewTime) {
+				queue.unshift(item.question);
+				review.splice(review.indexOf(item), 1);
+			}
+		}
+		current = queue[0];
+	}
+
+	updateElements();
+	canAnswer = true;
+	isReviewQuestion = false;
+	if (queue.length <= 5) refillQueue();
+}
+
+function refillQueue(callback, refill = false) {
+	const maxAdjectiveObscurity = 300; // to the n-th most used word
+	const maxNounObscurity = 1000;
+	const queueFill = 15; // minimum amount of new questions added
+	// async recursive loop break
+	if (refill != false && refill.length >= queueFill) {
+		queue = queue.concat(refill);
+		if (callback != undefined) callback();
+		return;
+	}
+	if (refill == false) refill = [];
+
+
+	let adjectiveIdList = [];
+	for (let i = 0; i < queueFill; i++) adjectiveIdList.push(randomInt(maxAdjectiveObscurity));
+	let nounIdList = [];
+	for (let i = 0; i < queueFill; i++) nounIdList.push(randomInt(maxNounObscurity));
+
+	getWordList("adjective", adjectiveIdList).then( adjectives => {
+		getWordList("noun", nounIdList).then( nouns => {
+			let tempRefill = [];
+			for (let i=0; i<queueFill; i++) tempRefill.push(new Question(adjectives[i], nouns[i]));
+			// Question vetting
+			for (let q of tempRefill)  if (!q.invalidQuestion) refill.push(q);
+			// recursion for async loop
+			refillQueue(callback, refill);
+		});
+	});
+}
+
+function updateElements() {
+	if (current.currentWord == "adjective") {
+		document.getElementById('question').innerHTML = current.question;
+		document.getElementById('choice1').innerHTML = current.adjectiveChoices[0];
+		document.getElementById('choice2').innerHTML = current.adjectiveChoices[1];
+		document.getElementById('choice3').innerHTML = current.adjectiveChoices[2];
+		document.getElementById('choice4').innerHTML = current.adjectiveChoices[3];
+		updateCounter();
+		document.getElementById('question-adjective').innerHTML = current.displayAdjective;
+		if (options["opt-adj"] && !options["opt-noun"]) {
+			document.getElementById('question-noun').innerHTML = current.nounAnswer;
+			document.getElementById('question-noun').classList.add('declined');
+		}
+		else
+			document.getElementById('question-noun').innerHTML = current.displayNoun;
+
+		document.getElementById('question-adjective').classList.add("selected-word");
+		document.getElementById('question-noun').classList.remove("selected-word");
+		document.getElementById('question-adjective').classList.remove('declined');
+
+		let gender;
+		if (current.noun.info.gender == "m") gender = "masculine";
+		if (current.noun.info.gender == "n") gender = "neuter";
+		if (current.noun.info.gender == "f") gender = "feminine";
+
+		let definition = current.adjective.info.translations_en;
+		if (definition.split(",").length > 4) definition = definition.split(",").slice(0, 4).join();
+		document.getElementById('word-info').innerHTML = `(${current.displayAdjective}: = ${definition}) ("${current.displayNoun}" is ${gender})`;
+	} else if (current.currentWord == "noun") {
+		document.getElementById('question').innerHTML = current.question;
+		document.getElementById('choice1').innerHTML = current.nounChoices[0];
+		document.getElementById('choice2').innerHTML = current.nounChoices[1];
+		document.getElementById('choice3').innerHTML = current.nounChoices[2];
+		document.getElementById('choice4').innerHTML = current.nounChoices[3];
+		updateCounter();
+		document.getElementById('question-adjective').innerHTML = current.adjectiveAnswer;
+		document.getElementById('question-noun').innerHTML = current.displayNoun;
+
+		document.getElementById('question-adjective').classList.remove("selected-word");
+		document.getElementById('question-noun').classList.add("selected-word");
+		document.getElementById('question-noun').classList.remove('declined');
+		document.getElementById('question-adjective').classList.add('declined');
+
+		let gender;
+		if (current.noun.info.gender == "m") gender = "masculine";
+		if (current.noun.info.gender == "n") gender = "neuter";
+		if (current.noun.info.gender == "f") gender = "feminine";
+		let definition = current.noun.info.translations_en;
+		if (definition.split(",").length > 4) definition = definition.split(",").slice(0, 4).join();
+		document.getElementById('word-info').innerHTML = `(${current.displayNoun}: ${gender}, = ${definition})`;
+	}
+}
+
+function updateCounter() {
+	document.getElementById('counter').childNodes[0].textContent = `Correct: ${correctCount}/${totalCount}`;
+}
+
+
+function loadOptions() {
+	options = {
+		'nom-sg': document.getElementById('nom-sg').checked,
+		'nom-pl': document.getElementById('nom-pl').checked,
+		'acc-sg': document.getElementById('acc-sg').checked,
+		'acc-pl': document.getElementById('acc-pl').checked,
+		'gen-sg': document.getElementById('gen-sg').checked,
+		'gen-pl': document.getElementById('gen-pl').checked,
+		'dat-sg': document.getElementById('dat-sg').checked,
+		'dat-pl': document.getElementById('dat-pl').checked,
+		'ins-sg': document.getElementById('ins-sg').checked,
+		'ins-pl': document.getElementById('ins-pl').checked,
+		'pre-sg': document.getElementById('pre-sg').checked,
+		'pre-pl': document.getElementById('pre-pl').checked,
+		'opt-m': document.getElementById('opt-m').checked,
+		'opt-f': document.getElementById('opt-f').checked,
+		'opt-n': document.getElementById('opt-n').checked,
+		'opt-adj': document.getElementById('opt-adj').checked,
+		'opt-noun': document.getElementById('opt-noun').checked
+	}
+	let caseOptions = ['nom-sg', 'nom-pl', 'acc-sg', 'acc-pl', 'gen-sg', 'gen-pl', 'dat-sg', 'dat-pl', 'ins-sg', 'ins-pl', 'pre-sg', 'pre-pl'];
+	let genderOptions = ['opt-m', 'opt-f', 'opt-n'];
+	let wordOptions = ['opt-adj', 'opt-noun'];
+
+	let valid = false;
+	for (let key of caseOptions) if (options[key]) valid = true;
+	if (!valid) {
+		alert("No case options selected!");
+		return false;
+	}
+
+	valid = false;
+	for (let key of genderOptions) if (options[key]) valid = true;
+	if (!valid) {
+		alert("No gender option selected!");
+		return false;
+	}
+
+	valid = false;
+	for (let key of wordOptions) if (options[key]) valid = true;
+	if (!valid) {
+		alert("No word type option selected!");
+		return false;
+	}
+
+	return true;
+}
+
+class Word {
+	constructor(wordInfo) {
+		// JSON.parse wordInfo automatically
+		this.info = typeof wordInfo == "string" ? JSON.parse(wordInfo) : wordInfo;
+		this.id = this.info.id;
+		this.type = this.info.type;
+		this.bare = this.info.bare; // bare str
+
+		if (this.type == "noun") {
+			this.propertyDescriptions = { // "tell me the ... of this word"
+				"bare": "unaccented nominative form",
+				"accented": "nominative form",
+				"translations_en": "english translation",
+				"translations_de": "german translation",
+				"gender": "gender", // m, f, or n
+				"partner": "opposite gender variant", // usually blank, may contain feminine/masculine counterpart EG американец parterner is американка
+				"animate": "", // 0: no, 1: yes, does noun decline to genitive in accusative, sans-female?
+				"indeclinable": "", // 0: no, 1: yes, for foreign borrow words EG радио does not decline !!WARNING!! Words with this may not have declensions listed!
+				"sg_only": "", // 0: no, 1: yes, Words that appear only in singular
+				"pl_only": "", // 0: no, 1: yes, Words that appear only in plural
+				"sg_nom": "singlular nominative form",
+				"sg_gen": "singular genitive form",
+				"sg_dat": "singular dative form",
+				"sg_acc": "singular accusative form",
+				"sg_inst": "singular instrumental form",
+				"sg_prep": "singular prepositional form",
+				"pl_nom": "plural nominative form",
+				"pl_gen": "plural genitive form",
+				"pl_dat": "plural dative form",
+				"pl_acc": "plural accusative form",
+				"pl_inst": "plural instrumental form",
+				"pl_prep": "plural prepositional form",
+			};
+		} else if (this.type == "adjective") {
+			this.properties = { // "tell me the ... of this word"
+				"bare":"unaccented nominative masculine form",
+				"accented":"nominative masculine form",
+				"position":"",			// ?
+				"translations_en":"english translation",
+				"translations_de":"german translation",
+				"incomparable":"",		// ?
+				"comparative":"",		// ?
+				"superlative":"",		// ?
+				"short_m":"masculine short form",			// Short forms !!WARNING!! Some don't have short forms
+				"short_f":"feminine short form",
+				"short_n":"neuter short form",
+				"short_pl":"plural short form",
+				"decl_m_nom":"nominative masculine form",		// Masculine forms
+				"decl_m_gen":"genitive masculine form",
+				"decl_m_dat":"dative masculine form",
+				"decl_m_acc":"accusative masculine form",
+				"decl_m_inst":"instrumental masculine form",
+				"decl_m_prep":"prepositional masculine form",
+				"decl_f_nom":"nominative feminine form",		// Feminine forms
+				"decl_f_gen":"genitive feminine form",
+				"decl_f_dat":"dative feminine form",
+				"decl_f_acc":"accusative feminine form",
+				"decl_f_inst":"instrumental feminine form",
+				"decl_f_prep":"prepositional feminine form",
+				"decl_n_nom":"nominative neuter form",		// Neuter forms
+				"decl_n_gen":"genitive neuter form",
+				"decl_n_dat":"dative neuter form",
+				"decl_n_acc":"accusative neuter form",
+				"decl_n_inst":"instrumental neuter form",
+				"decl_n_prep":"prepositional neuter form",
+				"decl_pl_nom":"nominative plural form",		// Plural forms
+				"decl_pl_gen":"genitive plural form",
+				"decl_pl_dat":"dative plural form",
+				"decl_pl_acc":"accusative plural form",
+				"decl_pl_inst":"instrumental plural form",
+				"decl_pl_prep":"prepositional plural form"
+			};
+		}
+	}
+}
+
+class Question {
+	constructor(adjective, noun) {
+		this.adjective = adjective;
+		this.noun = noun;
+		this.displayAdjective = this.adjective.info.accented;
+		this.displayNoun = this.noun.info.accented;
+
+		this.fixWords()
+		this.invalidQuestion = !this.isQuestionValid();
+		if (this.invalidQuestion == false) {
+			this.nounProperty = "accented";
+			this.adjectiveProperty = "accented";
+			this.question = "unselected";
+			this.nounAnswer = "ungenerated";
+			this.adjectiveAnswer = "ungenerated";
+			this.generateQuestion();
+
+			this.adjectiveChoices = [];
+			this.nounChoices = [];
+			this.generateChoices();
+
+			// word type: adjective or noun, not the ACTUAL word!
+			this.currentWord = "adjective";
+			if (options["opt-adj"] == false) this.currentWord = "noun";
+		}
+	}
+
+	// Removal of comma forms
+	fixWords() {
+		// Almost all adjectives have comma'd forms (variants) and we need to only have ONE answer.
+		// If we stuck both in the choices, it would be obvious that they are the correct answer.
+		// accusative case commas are to differentiate animate/inanimate in masculine and plural genders
+		// instrumental case commas are for frequent feminine spelling variances
+		// short form commas are for varying stress
+		// Other commas are uncommon and confusing
+
+		// assuming accusative case commas are ordered inanimate first, animate second
+		let comma = 0;
+		if (this.noun.info.animate == "1") comma = 1;
+		if (this.adjective.info["decl_m_acc"].split(",").length > 1) this.adjective.info["decl_m_acc"] = this.adjective.info["decl_m_acc"].split(",")[comma];
+		if (this.adjective.info["decl_pl_acc"].split(",").length > 1) this.adjective.info["decl_pl_acc"] = this.adjective.info["decl_pl_acc"].split(",")[comma];
+
+		// all other commas are, to my knowledge, insignificant. therefore, choose the first.
+		for (let [key, val] of Object.entries(this.adjective.info)) {
+			if (key == "translations_en" || key == "translations_de") continue;
+			if (typeof val == "string") this.adjective.info[key] = val.split(",")[0];
+		}
+
+		// noun commas are also confusing, but can't be easily chosen between algorithmically, so just choose the first!
+		for (let [key, val] of Object.entries(this.noun.info)) {
+			if (key == "translations_en" || key == "translations_de") continue;
+			if (typeof val == "string") this.noun.info[key] = val.split(",")[0];
+		}
+
+	}
+
+	generateQuestion() {
+		let possible = [];
+		if (options["nom-sg"]) possible.push("sg_nom");
+		if (options["nom-pl"]) possible.push("pl_nom");
+		if (options["acc-sg"]) possible.push("sg_acc");
+		if (options["acc-pl"]) possible.push("pl_acc");
+		if (options["gen-sg"]) possible.push("sg_gen");
+		if (options["gen-pl"]) possible.push("pl_gen");
+		if (options["dat-sg"]) possible.push("sg_dat");
+		if (options["dat-pl"]) possible.push("pl_dat");
+		if (options["ins-sg"]) possible.push("sg_inst");
+		if (options["ins-pl"]) possible.push("pl_inst");
+		if (options["pre-sg"]) possible.push("sg_prep");
+		if (options["pre-pl"]) possible.push("pl_prep");
+		for (let item of possible) if (this.noun.info[item] == "") possible = removeFromArray(possible, item);
+		if (possible.length === 0) return false;
+		this.nounProperty = possible[randomInt(possible.length - 1)];
+		// labelling + adjective property
+		let plurality = this.nounProperty.split("_")[0];
+		let caseAbbr = this.nounProperty.split("_")[1];
+		let gender = this.noun.info.gender;
+		let pluralityFull = plurality == "sg" ? "singular" : "plural";
+		let caseFull;
+		if (caseAbbr == "nom") caseFull = "nominative";
+		if (caseAbbr == "acc") caseFull = "accusative";
+		if (caseAbbr == "gen") caseFull = "genitive";
+		if (caseAbbr == "dat") caseFull = "dative";
+		if (caseAbbr == "inst") caseFull = "instrumental";
+		if (caseAbbr == "prep") caseFull = "prepositional";
+		this.adjectiveProperty = `decl_${plurality == "pl" ? "pl" : gender}_${caseAbbr}`;
+		this.question = `${caseFull} ${pluralityFull}`;
+
+		this.nounAnswer = this.noun.info[this.nounProperty];
+		this.adjectiveAnswer = this.adjective.info[this.adjectiveProperty];
+	}
+
+	generateChoices() {
+		// Noun
+		let possibleProperties = ["sg_nom", "sg_gen", "sg_dat", "sg_acc", "sg_inst", "sg_prep", "pl_nom", "pl_gen", "pl_dat", "pl_acc", "pl_inst", "pl_prep"];
+		let possible = [];
+		for (let key of possibleProperties) possible.push(this.noun.info[key]);
+		possible = removeFromArray(possible, "");
+		possible = removeFromArray(possible, this.nounAnswer);
+		let chosen = [];
+		for (let i=0; i<3; i++) {
+			if (possible.length == 0) {
+				if (chosen.length == 0) {
+					this.isQuestionValid = false;
+					return false;
+				}
+				chosen[i] = chosen[0];
+				continue;
+			}
+			chosen[i] = randomItem(possible);
+			possible = removeFromArray(possible, chosen[i]);
+		}
+		chosen.push(this.nounAnswer);
+		// chosen = chosen.map(item => item.split(",")[0]); // shorten all comma'd options
+		this.nounChoices = randomizeArray(chosen);
+
+		// Adjective
+		possibleProperties = [ "decl_m_nom", "decl_m_gen", "decl_m_dat", "decl_m_acc", "decl_m_inst", "decl_m_prep", 
+		"decl_f_nom", "decl_f_gen", "decl_f_dat", "decl_f_acc", "decl_f_inst", "decl_f_prep", "decl_n_nom", "decl_n_gen", 
+		"decl_n_dat", "decl_n_acc", "decl_n_inst", "decl_n_prep", "decl_pl_nom", "decl_pl_gen", "decl_pl_dat", "decl_pl_acc", 
+		"decl_pl_inst", "decl_pl_prep"];
+		possible = [];
+		for (let key of possibleProperties) possible.push(this.adjective.info[key]);
+		possible = removeFromArray(possible, "");
+		possible = removeFromArray(possible, this.adjectiveAnswer);
+		chosen = [];
+		for (let i=0; i<3; i++) {
+			if (possible.length == 0) {
+				if (chosen.length == 0) {
+					this.isQuestionValid = false;
+					return false;
+				}
+				chosen[i] = chosen[0];
+				continue;
+			}
+			chosen[i] = randomItem(possible);
+			possible = removeFromArray(possible, chosen[i]);
+		}
+		chosen.push(this.adjectiveAnswer);
+		// chosen = chosen.map(item => item.split(",")[0]); // shorten all comma'd options
+		this.adjectiveChoices = randomizeArray(chosen);
+	}
+
+	// checks for data defects and option conflicts
+	isQuestionValid() {
+		// gender mismatch
+		if (options[`opt-${this.noun.info.gender}`] == false) return false;
+		// case
+		let possible = [];
+		if (options["nom-sg"]) possible.push("sg_nom");
+		if (options["nom-pl"]) possible.push("pl_nom");
+		if (options["acc-sg"]) possible.push("sg_acc");
+		if (options["acc-pl"]) possible.push("pl_acc");
+		if (options["gen-sg"]) possible.push("sg_gen");
+		if (options["gen-pl"]) possible.push("pl_gen");
+		if (options["dat-sg"]) possible.push("sg_dat");
+		if (options["dat-pl"]) possible.push("pl_dat");
+		if (options["ins-sg"]) possible.push("sg_inst");
+		if (options["ins-pl"]) possible.push("pl_inst");
+		if (options["pre-sg"]) possible.push("sg_prep");
+		if (options["pre-pl"]) possible.push("pl_prep");
+		if (possible.length === 0) return false;
+		for (let item of possible) if (this.noun.info[item] == "") possible = removeFromArray(possible, item);
+		if (possible.length === 0) return false;
+		// required properties
+		this.nounRequirements = ["accented", "translations_en", "gender"];
+		for (let req of this.nounRequirements) if (this.noun.info[req] == "") return false;
+		this.adjectiveRequirements = ["accented", "translations_en"];
+		for (let req of this.adjectiveRequirements) if (this.adjective.info[req] == "") return false;
+		// adjective forms # check
+		let formCount = 0;
+		for (let [key, val] of Object.entries(this.adjective.info)) {
+			if (key.split("_")[0] == "decl" && val != "") formCount += 1;
+		}
+		if (formCount <= 3) return false;
+		// success!
+		return true;
+	}
+
+	isChoiceCorrect(choice) {
+		if (this.currentWord == "adjective" && choice.toUpperCase() == this.adjectiveAnswer.toUpperCase()) return true;
+		if (this.currentWord == "noun" && choice.toUpperCase() == this.nounAnswer.toUpperCase()) return true;
+		return false;
+	}
+}
+
+function removeFromArray(arr, remove) {
+	let tempArr = [];
+	for (let item of arr) if (item != remove) tempArr.push(item);
+	return tempArr;
+}
+
+function randomItem(arr) {
+	return arr[randomInt(arr.length-1)];
+}
+
+function randomizeArray(arr) {
+	let tempArr = [];
+	while (arr.length > 0) {
+		let rand = randomInt(arr.length - 1);
+		tempArr.push(arr[rand]);
+		arr.splice(rand, 1);
+	}
+	return tempArr;
+}
+
+function randomInt(max) {
+	return Math.floor(Math.random() * Math.floor(max + 1));
+}
+
+
+// Word request, storage, and retrieval functions
+
+// (str) type
+// (int arr) idList
+// returns (Promise) returns (Word arr)
+function getWordList(type, idList) {
+	let wordList = [];
+	let uncached = [];
+	for (let id of idList) {
+		if (isWordStored(type, id)) wordList.push(retrieveWord(type, id));
+		else uncached.push(id);
+	}
+	return new Promise((resolve, reject) => {
+		if (uncached.length !== 0) {
+			requestWordList(type, uncached).then(result => {
+				for (let word of result) storeWord(type, word);
+				wordList = wordList.concat(result);
+				resolve(wordList);
+			});
+		} else resolve(wordList);
+	});
+}
+
+// (str) type
+// (int arr) idList
+// returns (Promise) returns (Word arr)
+function requestWordList(type, idList) {
+
+	return new Promise((resolve, reject) => {
+		let wordList = [];
+		let xhttp = new XMLHttpRequest();
+		xhttp.onreadystatechange = () => {
+			if (xhttp.readyState == 4 && xhttp.status == 200) {
+				let response = JSON.parse(xhttp.responseText);
+				for (let item of response) wordList.push(new Word(item));
+				resolve(wordList);
+			}
+		};
+		xhttp.open("POST", "/word", true);
+		xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+		xhttp.send(`type=${type}&list=${idList.join("+")}`);
+	});
+}
+
+// (str) type
+// (Word) word
+function storeWord(type, word) {
+	let cachedList = JSON.parse(sessionStorage.getItem(`cached_${type}_list`));
+	if (cachedList == null) cachedList = [];
+	cachedList.push(word.id);
+	sessionStorage.setItem(`cached_${type}_list`, JSON.stringify(cachedList));
+	sessionStorage.setItem(`cached_${type}#${word.id}`, JSON.stringify(word.info));
+}
+
+// (str) type
+// (int) id
+// returns (Word)
+function retrieveWord(type, id) {
+	let requested = sessionStorage.getItem(`cached_${type}#${id}`);
+	if (requested == null) throw "requested null word #" + id;
+	else return new Word(JSON.parse(requested));
+}
+
+// (str) type
+// (int) id
+// returns (bool)
+function isWordStored(type, id) {
+	let cachedList = JSON.parse(sessionStorage.getItem(`cached_${type}_list`));
+	if (cachedList == null) return false;
+	if (cachedList.includes(id)) return true;
+	return false;
+}
+
+// polish functions
+
+function correctAnimation() {
+  let counter = document.getElementById("counter");
+  let dupe = counter.cloneNode();
+  dupe.id = "counter-dupe";
+  dupe.innerHTML = "+1";
+  dupe.style.textShadow = "4px 3px 4px #777";
+  dupe.style.color = "#2B3";
+  dupe.style.position = "absolute";
+  dupe.style.opacity = "1";
+  dupe.style.top = "0";
+  dupe.style.left = "68px";
+  dupe.style.transition = "top 1s, opacity 1.5s";
+  
+  counter.appendChild(dupe);
+  setTimeout(() => {
+    dupe.style.top = "-50px";
+    dupe.style.opacity = "0";
+    setTimeout(() => {
+      dupe.parentNode.removeChild(dupe);
+    }, 2000);
+  }, 20);
+}
+</script>
+</html>

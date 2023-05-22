@@ -1,0 +1,25 @@
+.content {
+  font-family: sans-serif;
+  display: flex;
+  margin: auto;
+  justify-content: center;
+  padding-top: 15%;
+}
+
+.center {
+  text-align: center;
+}
+
+textarea {
+  width: 200px;
+  height: 300px;
+}
+
+#submit {
+  width: 207px;
+  height: 30px;
+}
+
+#loading {
+  display: none;
+}

@@ -1,0 +1,64 @@
+body {
+    background: rgb(68,15,158);
+    background: linear-gradient(97deg, rgba(68,15,158,1) 15%, rgba(52,73,227,1) 85%);
+    font-family: sans-serif;
+}
+
+.centerpage {
+    background: rgba(230, 230, 230, 0);
+    height: 100%;
+    width: 600px;
+    margin: auto;
+    margin-top: -8px;
+}
+
+.header {
+    background: rgba(100, 100, 100, 0.6);
+    width: 100%;
+    height: 50px;
+    border-radius: 0px 0px 10px 10px;
+    color: white;
+    text-align: center;
+    border: 1px solid rgba(100, 100, 100, 0.8);
+    border-top: none;
+}
+
+.tracker {
+    display: inline-block;
+    border-left: 2px solid rgba(255, 255, 255, 0.5);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 15px 0px 0px 15px;
+    margin: 10px 10px;
+    padding: 5px 10px;
+    padding-right: 5px;
+    padding-top: 8px;
+}
+
+
+.card {
+    width: 350px;
+    height: 450px;
+    margin: auto;
+    user-select: none;
+    perspective: 2000px;
+    background: transparent;
+}
+
+.card-faces-wrapper {
+    width: 100%;
+    height: 100%;
+}
+
+.card-face {
+    width: 350px;
+    height: 450px;
+    position: absolute;
+    
+    background: rgba(200, 200, 200, 0.6);
+    background: #CCC;
+}
+
+.card-back-face {
+    transform: rotateY(180deg);
+    backface-visibility: hidden;
+}

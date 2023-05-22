@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Russian learning development</title>
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='theme.css') }}">
+</head>
+<body>
+  <br />
+  <br />
+  <br />
+  <div class='content'>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <span class='verb-id'>ID#{{id}}</span>
+          <div class='front-wrapper face-wrapper'>
+            <br />
+            <span class='verb front-verb'> {{verb}} </span>
+          </div>
+        </div>
+        <div class="flip-card-back">
+          <div class="back-wrapper face-wrapper">
+            <span class='verb'> {{verb}} </span><span class='aspect'>({{aspect_shorthand}})</span>
+            <br />
+            <span class='definition'> {{definition}} </span>
+            
+            <!--span class='table-label'>present</span-->
+            
+            <table class='present-future'>
+              <tr>
+                <td>{{presfut_sg1}}</td>
+                <td>{{presfut_pl1}}</td>
+              </tr>
+              <tr>
+                <td>{{presfut_sg2}}</td>
+                <td>{{presfut_pl2}}</td>
+              </tr>
+              <tr>
+                <td>{{presfut_sg3}}</td>
+                <td>{{presfut_pl3}}</td>
+              </tr>
+            </table>
+
+            <table class='past'>
+              <tr>
+                <td>{{past_m}}</td>
+              </tr>
+              <tr>
+                <td>{{past_f}}</td>
+              </tr>
+              <tr>
+                <td>{{past_n}}</td>
+              </tr>
+              <tr>
+                <td>{{past_pl}}</td>
+              </tr>
+            </table>
+
+            <table class='imperative'>
+              <tr>
+                <td>{{imperative_sg}}</td>
+              </tr>
+              <tr>
+                <td>{{imperative_pl}}</td>
+              </tr>
+            </table>
+
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class='under-card'>
+      <button class='review'>Review again</button>
+      <button class='confident'>Confident</button>
+      <br />
+      <p>Review: {{review_num}}, Confident: {{confident_num}}, Remaining: {{remaining_num}}</p>
+    </div>
+  </div>
+</body>
+</html>

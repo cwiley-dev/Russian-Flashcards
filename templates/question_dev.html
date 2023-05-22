@@ -1,0 +1,569 @@
+<html>
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Declension practice</title>
+	<style>
+html {
+  font-family: sans-serif;
+}
+
+.content-wrapper {
+  text-align: center;
+}
+
+.question-wrapper {
+  display: inline-block;
+  width: auto;
+  background: #EEE;
+  padding: 20px 40px;
+  font-size: 20px;
+}
+
+.question-wrapper button {
+  font-size: 20px;
+}
+
+#question {
+  font-weight: bold;
+  font-size: 25px;
+}
+
+#word-info {
+  color: #333;
+  font-size: 16px;
+  font-style: italic;
+}
+
+.question-wrapper table {
+  display: inline-block;
+  margin: auto;
+  text-align: center;
+}
+
+.options {
+  margin-top: 20px;
+  float: left;
+  text-align: left;
+  background: #EEE;
+  padding: 10px;
+  position: absolute;
+}
+
+.options button {
+  margin: auto;
+}
+
+.correct {
+  background-color: #AFA;
+  box-shadow: 0 0 3px lime inset;
+}
+
+.incorrect {
+  background-color: #FAA;
+  box-shadow: 0 0 3px red inset;
+}
+	</style>
+
+</head>
+<body>
+  <div class='content-wrapper'>
+    <div class='question-wrapper'>
+      <span id='question'>Question</span><br>
+      <span id='word-info'></span>
+      <br>
+      <br>
+      <table>
+        <tr>
+          <td><button id='choice1'>Choice 1</button></td>
+          <td><button id='choice2'>Choice 2</button></td>
+        </tr>
+        <tr>
+          <td><button id='choice3'>Choice 3</button></td>
+          <td><button id='choice4'>Choice 4</button></td>
+        </tr>
+      </table>
+      <br><br>
+      <button id='next-button'>Next question</button><br>
+
+      <span id='counter'>Correct: 0/0</span><br>
+    </div>
+
+    <div class='options'>
+      Options:<br>
+      <table>
+        <tr>
+          <td>Nominative:</td>
+          <td></td>
+          <td><input type='checkbox' id='nom-pl' checked> plural</td>
+        </tr>
+        <tr>
+          <td>Accusative:</td>
+          <td><input type='checkbox' id='acc-sg'> singular</td>
+          <td><input type='checkbox' id='acc-pl'> plural</td>
+        </tr>
+        <tr>
+          <td>Genitive:</td>
+          <td><input type='checkbox' id='gen-sg'> singular</td>
+          <td><input type='checkbox' id='gen-pl'> plural</td>
+        </tr>
+        <tr>
+          <td>Dative:</td>
+          <td><input type='checkbox' id='dat-sg'> singular</td>
+          <td><input type='checkbox' id='dat-pl'> plural</td>
+        </tr>
+        <tr>
+          <td>Instrumental:</td>
+          <td><input type='checkbox' id='ins-sg'> singular</td>
+          <td><input type='checkbox' id='ins-pl'> plural</td>
+        </tr>
+        <tr>
+          <td>Prepositional:</td>
+          <td><input type='checkbox' id='pre-sg'> singular</td>
+          <td><input type='checkbox' id='pre-pl'> plural</td>
+        </tr>
+      </table>
+      <table>
+        <tr>
+          <td>Gender:</td>
+          <td><input type='checkbox' id='opt-m' checked> masculine</td>
+          <td><input type='checkbox' id='opt-f' checked> feminine</td>
+          <td><input type='checkbox' id='opt-n' checked> neuter</td>
+        </tr>
+      </table>
+      <br>
+      <button id='start'>Start with new options</button>
+    </div>
+  </div>
+
+  
+</body>
+<script>
+// jshint esnext: true
+
+/*
+TODO
+make question queue init first time
+finish refillQueue
+
+*/
+var options = {
+	'nom-pl': false,
+	'acc-sg': false,
+	'acc-pl': false,
+	'gen-sg': false,
+	'gen-pl': false,
+	'dat-sg': false,
+	'dat-pl': false,
+	'ins-sg': false,
+	'ins-pl': false,
+	'pre-sg': false,
+	'pre-pl': false,
+	'opt-m':  false,
+	'opt-f':  false,
+	'opt-n':  false
+}
+
+function loadOptions() {
+	options = {
+		'nom-pl': document.getElementById('nom-pl').checked,
+		'acc-sg': document.getElementById('acc-sg').checked,
+		'acc-pl': document.getElementById('acc-pl').checked,
+		'gen-sg': document.getElementById('gen-sg').checked,
+		'gen-pl': document.getElementById('gen-pl').checked,
+		'dat-sg': document.getElementById('dat-sg').checked,
+		'dat-pl': document.getElementById('dat-pl').checked,
+		'ins-sg': document.getElementById('ins-sg').checked,
+		'ins-pl': document.getElementById('ins-pl').checked,
+		'pre-sg': document.getElementById('pre-sg').checked,
+		'pre-pl': document.getElementById('pre-pl').checked,
+		'opt-m': document.getElementById('opt-m').checked,
+		'opt-f': document.getElementById('opt-f').checked,
+		'opt-n': document.getElementById('opt-n').checked
+	}
+	let caseOptions = ['nom-pl', 'acc-sg', 'acc-pl', 'gen-sg', 'gen-pl', 'dat-sg', 'dat-pl', 'ins-sg', 'ins-pl', 'pre-sg', 'pre-pl'];
+	let genderOptions = ['opt-m', 'opt-f', 'opt-n'];
+
+	let valid = false;
+	for (let key of caseOptions) if (options[key]) valid = true;
+	if (!valid) {
+		alert("No case options selected!");
+		return false;
+	}
+
+	valid = false;
+	for (let key of genderOptions) if (options[key]) valid = true;
+	if (!valid) {
+		alert("No gender option selected!");
+		return false;
+	}
+
+	return true;
+}
+
+function updateCounter() {
+	document.getElementById('counter').innerHTML = `Correct: ${correctCount}/${totalCount}`;
+}
+
+function updateElements(question = current) {
+	document.getElementById('question').innerHTML = question.question;
+	document.getElementById('choice1').innerHTML = question.choices[0];
+	document.getElementById('choice2').innerHTML = question.choices[1];
+	document.getElementById('choice3').innerHTML = question.choices[2];
+	document.getElementById('choice4').innerHTML = question.choices[3];
+	document.getElementById('counter').innerHTML = `Correct: ${correctCount}/${totalCount}`;
+
+	let gender;
+	if (question.word.info.gender == "m") gender = "masculine";
+	if (question.word.info.gender == "n") gender = "neuter";
+	if (question.word.info.gender == "f") gender = "feminine";
+	let definition = question.word.info.translations_en;
+	if (definition.split(",").length > 4) definition = definition.split(",").slice(0, 4).join();
+	document.getElementById('word-info').innerHTML = `(${question.displayWord}: ${gender}, = ${definition})`;
+}
+
+// 0 <= x <= max
+function randomInt(max) {
+	return Math.floor(Math.random() * Math.floor(max + 1));
+}
+
+document.getElementById('start').onclick = e => startButton();
+
+
+var correct = false;
+var canAnswer = true; // to restrict to 1 answer per question
+var correctCount = 0;
+var totalCount = 0;
+
+// preload 15 questions and when it's down to 5 preload another 15
+var queue = [];
+var current;
+
+var review = []; // {question, totalCount when answered}
+var reviewTime = 5; // # of questions until the question is revisited
+var recent = []; // {id, totalCount when answered}
+var recentTime = 10; // # of questions until the same word can be quizzed again
+
+function startButton() {
+	if (loadOptions() == false) return false;
+	canAnswer = true;
+	correctCount = 0;
+	totalCount = 0;
+	queue = [];
+	updateCounter();
+	refillQueue(() => {
+		current = queue[0];
+		updateElements(current);
+	});
+
+	for (let i=0; i<4; i++) {
+		document.getElementById(`choice${i+1}`).classList.remove('correct');
+		document.getElementById(`choice${i+1}`).classList.remove('incorrect');
+	}
+
+	document.getElementById('next-button').onclick = e => nextQuestion();
+	document.getElementById('choice1').onclick = e => answerQuestion(1);
+	document.getElementById('choice2').onclick = e => answerQuestion(2);
+	document.getElementById('choice3').onclick = e => answerQuestion(3);
+	document.getElementById('choice4').onclick = e => answerQuestion(4);
+}
+
+function answerQuestion(num) {
+	if (!canAnswer) return;
+	canAnswer = false;
+	// checking answer
+	let value = document.getElementById(`choice${num}`).innerHTML;
+	if (queue[0].isChoiceCorrect(value)) correct = true;
+	else correct = false;
+
+	// coloring
+	let values = [
+	document.getElementById('choice1').innerHTML,
+	document.getElementById('choice2').innerHTML,
+	document.getElementById('choice3').innerHTML,
+	document.getElementById('choice4').innerHTML
+	];
+	if (!correct) document.getElementById(`choice${num}`).classList.add('incorrect');
+	for (let val of values) if (queue[0].isChoiceCorrect(val)) document.getElementById(`choice${values.indexOf(val)+1}`).classList.add('correct');
+
+	// review and recent handling
+	if (correct) recent.push({'id':current.word.id,'time':totalCount});
+	else review.push({'question':current,'time':totalCount});
+
+	// counter updating
+	if (correct) correctCount += 1;
+	totalCount += 1;
+	correct = false;
+	updateCounter();
+}
+
+function nextQuestion() {
+	canAnswer = true;
+	// clear coloring
+	for (let i=0; i<4; i++) {
+		document.getElementById(`choice${i+1}`).classList.remove('correct');
+		document.getElementById(`choice${i+1}`).classList.remove('incorrect');
+	}
+
+	// queue manipulation and review / recent handling
+	queue = queue.slice(1); // remove 1st (completed question)
+	for (let item of recent) {
+		if (totalCount - item.time >= recentTime) recent.splice(recent.indexOf(item), 1);
+		for (let question of queue) if (question.word.id == item.id) queue.splice(queue.indexOf(question), 1);
+	}
+	for (let item of review) {
+		if (totalCount - item.time >= reviewTime) {
+			queue.unshift(item.question);
+			review.splice(review.indexOf(item), 1);
+		}
+	}
+	current = queue[0];
+	updateElements(current);
+
+	if (queue.length <= 5) refillQueue();
+}
+
+// semi-recursive due to asynchronous task looping,
+// must return _valid_ questions but can't request specific properties from the server
+function refillQueue(callback, refill = false) {
+	const maxObscurity = 1000; // to the n-th most used word
+	const queueFill = 15; // minimum amount of new questions added
+	if (refill != false && refill.length >= queueFill) {
+		queue = queue.concat(refill);
+		if (callback != undefined) callback();
+		return;
+	}
+	if (refill == false) refill = [];
+
+	let idList = [];
+	for (let i = 0; i < queueFill; i++) idList.push(randomInt(maxObscurity));
+
+	getWordList(idList).then(result => {
+		let tempRefill = [];
+		for (let word of result) tempRefill.push(new Question(word));
+
+		// remove bad questions before they can cause an issue.
+		// filters based on options
+		let tempQueue = [];
+		for (let q of tempRefill) {
+			let valid = true;
+			if (q.invalidQuestion) valid = false;
+			if (options[`opt-${q.word.info.gender}`] == false) valid = false;
+			if (valid) refill.push(q);
+		}
+		refillQueue(callback, refill);
+	});
+}
+
+function init() {
+
+}
+
+
+class Word {
+	constructor(wordInfo) {
+		// JSON.parse wordInfo automatically
+		this.info = typeof wordInfo == "string" ? JSON.parse(wordInfo) : wordInfo;
+		this.id = this.info.id;
+		this.type = this.info.type;
+		this.bare = this.info.bare; // bare str
+
+		this.propertyDescriptions = { // "tell me the ... of this word"
+			"bare": "unaccented nominative form",
+			"accented": "nominative form",
+			"translations_en": "english translation",
+			"translations_de": "german translation",
+			"gender": "gender", // m, f, or n
+			"partner": "opposite gender variant", // usually blank, may contain feminine/masculine counterpart EG американец parterner is американка
+			"animate": "", // 0: no, 1: yes, does noun decline to genitive in accusative, sans-female?
+			"indeclinable": "", // 0: no, 1: yes, for foreign borrow words EG радио does not decline !!WARNING!! Words with this may not have declensions listed!
+			"sg_only": "", // 0: no, 1: yes, Words that appear only in singular
+			"pl_only": "", // 0: no, 1: yes, Words that appear only in plural
+			"sg_nom": "singlular nominative form",
+			"sg_gen": "singular genitive form",
+			"sg_dat": "singular dative form",
+			"sg_acc": "singular accusative form",
+			"sg_inst": "singular instrumental form",
+			"sg_prep": "singular prepositional form",
+			"pl_nom": "plural nominative form",
+			"pl_gen": "plural genitive form",
+			"pl_dat": "plural dative form",
+			"pl_acc": "plural accusative form",
+			"pl_inst": "plural instrumental form",
+			"pl_prep": "plural prepositional form",
+		};
+	}
+}
+
+
+
+class Question {
+	// (Word) word
+	constructor(word) {
+		this.word = word;
+		this.displayWord = this.word.info.accented;
+
+		this.invalidQuestion = false; // flag for removal if something wrong
+
+		this.questionProperty = "accented";
+		this.question = "ungenerated question";
+		this.answer = "ungenerated answer";
+		this.generateQuestion();
+
+		// Choices: 3 wrong, 1 right
+		// choices are word declensions, not property labels, eg [отец, отца, отцу, отцов]
+		// this.answer = the correct choice
+		this.choices = [];
+		this.generateChoices();
+
+		this.requirements = ["accented", "translations_en", "gender"];
+		for (let req of this.requirements) if (this.word.info[req] == "") this.invalidQuestion = true;
+	}
+
+	generateQuestion(property = false) {
+		let possible = [];
+		if (options["nom-pl"]) possible.push("pl_nom");
+		if (options["acc-sg"]) possible.push("sg_acc");
+		if (options["acc-pl"]) possible.push("pl_acc");
+		if (options["gen-sg"]) possible.push("sg_gen");
+		if (options["gen-pl"]) possible.push("pl_gen");
+		if (options["dat-sg"]) possible.push("sg_dat");
+		if (options["dat-pl"]) possible.push("pl_dat");
+		if (options["ins-sg"]) possible.push("sg_inst");
+		if (options["ins-pl"]) possible.push("pl_inst");
+		if (options["pre-sg"]) possible.push("sg_prep");
+		if (options["pre-pl"]) possible.push("pl_prep");
+		if (possible.length === 0) {
+			alert("No options selected!");
+			this.invalidQuestion = true;
+			return false;
+		}
+		for (let item of possible) if (this.word.info[item] == "") possible = removeFromArray(possible, item);
+		if (possible.length === 0) {
+			this.invalidQuestion = true;
+			return false;
+		}
+		
+		this.questionProperty = possible[randomInt(possible.length - 1)];
+		this.question = `What is the ${this.word.propertyDescriptions[this.questionProperty]} of ${this.displayWord}?`;
+		this.answer = this.word.info[this.questionProperty];
+	}
+
+	generateChoices() {
+		// Creating better method, will weed out dupes in possible[]
+		let possibleProperties = ["sg_nom", "sg_gen", "sg_dat", "sg_acc", "sg_inst", "sg_prep", "pl_nom", "pl_gen", "pl_dat", "pl_acc", "pl_inst", "pl_prep"];
+		// remove answer property
+		possibleProperties = removeFromArray(possibleProperties, this.questionProperty);
+		// remove empty properties
+		for (let item of possibleProperties) if (this.word.info[item] == "") possibleProperties = removeFromArray(possibleProperties, item);
+
+		let possible = [];
+		// populate possible with remaining possible properties
+		for (let item of possibleProperties) possible.push(this.word.info[item]);
+		for (let item of possible) if (item == this.answer) possible = removeFromArray(possible, item);
+
+		if (possible.length === 0) {
+			this.invalidQuestion = true;
+			return false;
+		}
+
+		let chosen = [];
+		for (let i = 0; i < 3; i++) {
+			// populate with dupes if no alternative
+			if (possible.length === 0) chosen.push(chosen[0]);
+			else {
+				let tempChosen = possible[randomInt(possible.length-1)];
+				// Prevent dupes by removing all matching properties
+				for (let item of possible) if (item == tempChosen) possible = removeFromArray(possible, item);
+				chosen.push(tempChosen);
+			}
+		}
+		chosen.push(this.answer);
+		chosen = chosen.map(item => item.split(",")[0]); // shorten all comma'd options
+		// randomly push chosen into choices
+		for (let i = 0; i < 4; i++) {
+			let rand = randomInt(chosen.length - 1);
+			this.choices.push(chosen[rand]);
+			chosen.splice(rand, 1);
+		}
+	}
+
+	isChoiceCorrect(choice) {
+		if (choice.toUpperCase() == this.answer.toUpperCase()) return true;
+		return false;
+	}
+}
+
+function removeFromArray(arr, item) {
+	let newArr = [];
+	for (let i of arr) if (i != item) newArr.push(i);
+	return newArr;
+}
+
+// ~22000 nouns in nouns.csv
+
+// (int arr) idList
+// returns (Promise) returns (Word arr)
+function getWordList(idList) {
+	let wordList = [];
+	let uncached = [];
+	for (let id of idList) {
+		if (isWordStored(id)) wordList.push(retrieveWord(id));
+		else uncached.push(id);
+	}
+	return new Promise((resolve, reject) => {
+		if (uncached.length !== 0) {
+			requestWordList(uncached).then(result => {
+				wordList = wordList.concat(result);
+				resolve(wordList);
+			});
+		} else resolve(wordList);
+	});
+}
+
+// (int arr) idList
+// returns (Promise) returns (Word arr)
+function requestWordList(idList) {
+	return new Promise((resolve, reject) => {
+		let wordList = [];
+		let xhttp = new XMLHttpRequest();
+		xhttp.onreadystatechange = () => {
+			if (xhttp.readyState == 4 && xhttp.status == 200) {
+				let response = JSON.parse(xhttp.responseText);
+				for (let item of response) wordList.push(new Word(item));
+				resolve(wordList);
+			}
+		};
+		xhttp.open("POST", "/word", true);
+		xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+		xhttp.send(`type=noun&list=${idList.join("+")}`);
+	});
+}
+
+// (Word) word
+function storeWord(word) {
+	if (typeof word != "string") throw "string required";
+	let cachedList = JSON.parse(sessionStorage.getItem("cached_noun_list"));
+	if (cachedList == null) cachedList = [];
+	cachedList.push(word.id);
+	sessionStorage.setItem("cached_noun_list", JSON.stringify(cachedList));
+	sessionStorage.setItem(`cached_noun#${word.id}`, JSON.stringify(word.info));
+}
+
+// returns (Word)
+function retrieveWord(id) {
+	let requested = sessionStorage.getItem(`cached_noun#${id}`);
+	if (requested == null) throw "requested null word #" + id;
+	else return new Word(JSON.parse(requested));
+}
+
+// (int) id
+function isWordStored(id) {
+	let cachedList = JSON.parse(sessionStorage.getItem("cached_noun_list"));
+	if (cachedList == null) return false;
+	if (cachedList.includes(id)) return true;
+	return false;
+}
+
+init();
+</script>
+</html>

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Flashcards setup</title>
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='theme_start.css') }}">
+</head>
+<body>
+  <div class='content'>
+    <div class='center'>
+      Enter verbs, one on each line<hr><br>
+      <textarea id='verbs'></textarea>
+      <br>
+      <button id='submit'>Submit</button>
+      <br><br>
+      <span id='loading'>Loading...</span>
+    </div>
+  </div>
+  </body>
+<script src="{{ url_for('static', filename='script_start.js') }}"></script>
+</html>

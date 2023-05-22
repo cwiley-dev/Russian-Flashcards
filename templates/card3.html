@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Card</title>
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='theme_card3.css') }}">
+</head>
+<body>
+  <div class='header'>
+    <div class='tracker'>
+      <span class='review' id='review'>Review: </span>
+      <span class='confident' id='confident'>Confident: </span>
+      <span class='remaining' id='remaining'>Remaining: </span>
+    </div>
+  </div>
+  
+
+  <div class='content'>
+    
+    <div class='card-wrapper-wrapper'>
+      <div class='card-wrapper'>
+
+        <div class='card-front-wrapper'>
+          <span class='card-id'>id#{{id}}</span>
+          <span class='card-front-verb'>{{verb}}</span>
+        </div>
+
+        <div class='card-back-wrapper'>
+          <table class='card-back-format-table'>
+            
+            <tr><td>
+              <div class='card-header'>
+                <span class='card-verb'>{{verb}}</span>
+                <span class='card-verb-aspect'>({{aspect_shorthand}})</span>
+                <br />
+                <span class='card-verb-partner'>
+                  <span class='card-verb-partner-label'>Aspectual partner:</span>
+                  <span class='card-verb-partner-verb'>{{partner}}</span>
+                  <span class='card-verb-partner-aspect'>({{partner_aspect_shorthand}})</span>
+                </span>
+                <hr />
+              </div>
+              <div class='card-definition'>
+                {{definition}}
+              </div>
+              <hr />
+            </td></tr>
+            
+            <tr><td>
+            <div class='card-conjugations'>
+
+              <table class='card-table card-present-conjugations'>
+                <tr>
+                  <th> </th>
+                  <th>Subject</th>
+                  <th>Singular</th>
+                  <th>Plural</th>
+                </tr>
+                <tr>
+                  <td rowspan='3' class='card-table-label'><div>Present</div></td>
+                  <td>First-person</td>
+                  <td class='card-presfut-sg1'>{{presfut_sg1}}</td>
+                  <td class='card-presfut-pl1'>{{presfut_pl1}}</td>
+                </tr>
+                <tr>
+                  <td>Second-person</td>
+                  <td class='card-presfut-sg2'>{{presfut_sg2}}</td>
+                  <td class='card-presfut-pl2'>{{presfut_pl2}}</td>
+                </tr>
+                <tr>
+                  <td>Third-person</td>
+                  <td class='card-presfut-sg3'>{{presfut_sg3}}</td>
+                  <td class='card-presfut-pl3'>{{presfut_pl3}}</td>
+                </tr>
+
+                <tr>
+                  <td rowspan='3' class='card-table-label'><div>Past</div></td>
+                  <td>Male</td>
+                  <td class='card-past-m'>{{past_m}}</td>
+                  <td class='card-past-pl' rowspan='3'>{{past_pl}}</td>
+                </tr>
+                <tr>
+                  <td>Female</td>
+                  <td class='card-past-f'>{{past_f}}</td>
+                </tr>
+                <tr>
+                  <td>Neuter</td>
+                  <td class='card-past-n'>{{past_n}}</td>
+                </tr>
+              </table>
+
+              <table class='card-table'>
+                <tr>
+                  <th colspan='4' class='card-table-label'>Imperative</th>
+                </tr>
+                <tr>
+                  <th>Singular</th>
+                  <th>Plural</th>
+                </tr>
+                <tr>
+                  <td class='card-imperative-sg'>{{imperative_sg}}</td>
+                  <td class='card-imperative-pl'>{{imperative_pl}}</td>
+                </tr>
+              </table>
+
+              </div>
+            </td></tr>
+
+            <tr><td valign='bottom'>
+              <div class='card-button-wrapper'>
+                <button class='card-button card-button-left'>Review</button>
+                <button class='card-button card-button-right'>Confident</button>
+              </div>
+            </td></tr>
+          </table>
+        </div>
+
+      </div>
+    </div>
+    
+    <div class='card-wrapper-wrapper endcard-wrapper-wrapper'>
+      <div class='card-wrapper'>
+
+        <div class='card-front-wrapper'>
+          <span class='card-front-verb'>
+            End of set!
+            <div class='card-stats'>
+              Set size: <br>
+              Reviewed: <br>
+              Confident: <br>
+              Left to review: <br>
+            </div>
+          </span>
+          
+
+          <div class='card-button-wrapper'>
+            <button class='card-button card-button-left'>Review cards</button>
+            <button class='card-button card-button-right'>Restart set</button>
+          </div>
+          
+        </div>
+
+      </div>
+    </div>
+    
+  </div>
+  
+</body>
+<script type = "module" src="{{ url_for('static', filename='script_api.js') }}"></script>
+<script type = "module" src="{{ url_for('static', filename='script_card4.js') }}"></script>
+</html>
