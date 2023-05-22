@@ -13,6 +13,8 @@ Go to `localhost:5000/dev2` to practive adjective AND noun declension! This is s
 
 In the quiz modes, if you fail a word, it will keep coming up every few questions until you get it correct!
 
+.
+
 TODO:
 - Design a custom dictionary system where users can define the words they want to practice.
 - Integrate it as a web extension where a user can highlight text and add words to their dictionary automatically.
